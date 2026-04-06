@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8/0 Alignment — How It Works</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f6f5f2;
+    --text: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --text-tertiary: #9a9994;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.22);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg-secondary: #252522;
+      --text: #f0ede8;
+      --text-secondary: #a8a49e;
+      --text-tertiary: #6b6862;
+      --border: rgba(255,255,255,0.10);
+      --border-md: rgba(255,255,255,0.18);
+    }
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-secondary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .shell {
+    background: var(--bg);
+    border-radius: 16px;
+    border: 0.5px solid var(--border);
+    padding: 32px 28px 28px;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .logo { font-size: 13px; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
+  .logo span { color: var(--text-tertiary); font-weight: 400; }
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-md); transition: background 0.2s; }
+  .dot.on { background: var(--text); }
+  .step-num { font-size: 10px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 5px; }
+  .step-title { font-size: 18px; font-weight: 500; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+  .step-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 20px; }
+  .mk { background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 24px; min-height: 120px; }
+  .nav { display: flex; justify-content: space-between; align-items: center; }
+  .btn { padding: 7px 20px; font-size: 13px; font-family: var(--font); border: 0.5px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; transition: background 0.15s; }
+  .btn:hover { background: var(--bg-secondary); }
+  .btn:disabled { opacity: 0.3; cursor: default; }
+  .btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn.primary:hover { opacity: 0.85; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .tbl th { text-align: left; padding: 4px 6px; color: var(--text-tertiary); font-weight: 500; border-bottom: 0.5px solid var(--border); }
+  .tbl td { padding: 5px 6px; border-bottom: 0.5px solid var(--border); color: var(--text-secondary); }
+  .bx { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
+  .bbl { background: #E6F1FB; color: #0C447C; }
+  .btl { background: #E1F5EE; color: #085041; }
+  .bam { background: #FAEEDA; color: #633806; }
+  .bgr { background: #F1EFE8; color: #444441; }
+  .bpu { background: #EEEDFE; color: #3C3489; }
+  .pill { display: inline-block; font-size: 10px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+  .good { background: #E1F5EE; color: #085041; }
+  .bad  { background: #FCEBEB; color: #791F1F; }
+  .warn { background: #FAEEDA; color: #633806; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+  .flc { display: flex; align-items: center; }
+  .fl  { display: flex; }
+  .connector { width: 1px; background: var(--border-md); height: 16px; margin: 0 auto; }
+  .node { border-radius: var(--radius); padding: 9px 14px; font-size: 12px; }
+  .br-bg   { height: 7px; background: var(--border); border-radius: 4px; margin-top: 3px; }
+  .br-fill { height: 7px; border-radius: 4px; }
+  .open-link { display: inline-block; font-size: 13px; color: #185FA5; text-decoration: none; margin-top: 12px; }
+  .open-link:hover { text-decoration: underline; }
+  .progress-bar { height: 2px; background: var(--border); border-radius: 2px; margin-bottom: 24px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--text); border-radius: 2px; transition: width 0.3s ease; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="header">
+    <div class="logo">8/0 <span>Alignment</span></div>
+    <div class="dots" id="dots"></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+  <div id="body"></div>
+  <div class="nav">
+    <button class="btn" id="bb" onclick="prev()">← Back</button>
+    <button class="btn primary" id="nb" onclick="nxt()">Next →</button>
+  </div>
+</div>
+
+<script>
+const S=[
+{t:"Alignment by design",d:"The app is named for a structural truth: tasks drive epics forward. When subtasks ship, they'll drive tasks forward. Every unit of effort is load-bearing — no orphan tasks, no theater.",m:`<div style="display:flex;flex-direction:column;align-items:center;gap:0;"><div class="node" style="background:#EEEDFE;color:#3C3489;border:0.5px solid #AFA9EC;width:200px;text-align:center;font-weight:500;">Epic</div><div style="font-size:10px;color:var(--text-tertiary);margin:3px 0;text-align:center;">e.g. Fundraising, Commercial, Product</div><div class="connector"></div><div class="node" style="background:#E6F1FB;color:#0C447C;border:0.5px solid #85B7EB;width:200px;text-align:center;font-weight:500;">Task</div><div style="font-size:10px;color:var(--text-tertiary);margin:3px 0;text-align:center;">e.g. Close seed round, Alliant pilot proposal</div><div class="connector"></div><div class="node" style="background:var(--bg-secondary);color:var(--text-secondary);border:0.5px solid var(--border);width:200px;text-align:center;font-weight:500;">Subtask <span style="font-size:10px;opacity:0.6;">(coming)</span></div><div style="font-size:10px;color:var(--text-tertiary);margin:3px 0;text-align:center;">e.g. Draft term sheet, send NDA</div><div style="margin-top:14px;padding:9px 13px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);font-size:11px;color:var(--text-secondary);max-width:300px;text-align:center;line-height:1.5;">If you can't trace a task to an epic, it either belongs to a missing epic or doesn't belong here at all.</div></div>`},
+{t:"Force ranking — there is one number one",d:"No ties. No two tasks share a priority. This forces a real decision about what matters most right now. If everything is P1, nothing is. Re-rank resolves drift automatically.",m:`<div style="display:flex;gap:8px;align-items:flex-start;"><div class="card" style="flex:1;"><div style="font-size:11px;font-weight:500;color:var(--text-tertiary);margin-bottom:8px;">Before re-rank</div><table class="tbl"><tbody><tr><td style="color:var(--text-tertiary);">P1</td><td>Close seed round</td></tr><tr><td style="color:var(--text-tertiary);">P1</td><td>MOO demo</td></tr><tr><td style="color:var(--text-tertiary);">P1</td><td>Alliant proposal</td></tr></tbody></table><div class="pill bad" style="margin-top:8px;">Three P1s — no signal</div></div><div style="font-size:16px;color:var(--text-tertiary);padding-top:40px;">→</div><div class="card" style="flex:1;"><div style="font-size:11px;font-weight:500;color:var(--text-tertiary);margin-bottom:8px;">After re-rank</div><table class="tbl"><tbody><tr><td style="font-weight:500;color:var(--text);">1</td><td style="color:var(--text);">Close seed round</td></tr><tr><td style="font-weight:500;color:var(--text);">2</td><td style="color:var(--text);">MOO demo</td></tr><tr><td style="font-weight:500;color:var(--text);">3</td><td style="color:var(--text);">Alliant proposal</td></tr></tbody></table><div class="pill good" style="margin-top:8px;">Clear — act on #1 first</div></div></div><div style="font-size:11px;color:var(--text-tertiary);padding:10px 0 0;text-align:center;">Re-rank button resolves priority drift in one click</div>`},
+{t:"What belongs here — merit threshold",d:"Other BUs can use whatever tools they want. But anything of strategic merit gets a mirror entry here. The test: if this doesn't get done, does an epic slip?",m:`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div><div class="pill good" style="margin-bottom:8px;padding:3px 10px;">In ✓</div><div style="display:flex;flex-direction:column;gap:5px;"><div class="card" style="font-size:11px;color:var(--text);">New carrier integration milestone</div><div class="card" style="font-size:11px;color:var(--text);">Seed round close</div><div class="card" style="font-size:11px;color:var(--text);">Product launch (live or not)</div><div class="card" style="font-size:11px;color:var(--text);">Key pilot proposal sent</div><div class="card" style="font-size:11px;color:var(--text);">Strategic hire decision</div></div></div><div><div class="pill bad" style="margin-bottom:8px;padding:3px 10px;">Out ✗</div><div style="display:flex;flex-direction:column;gap:5px;"><div class="card" style="font-size:11px;color:var(--text-tertiary);">Monday sales call with X</div><div class="card" style="font-size:11px;color:var(--text-tertiary);">Block time for deep work</div><div class="card" style="font-size:11px;color:var(--text-tertiary);">Review Q1 expense report</div><div class="card" style="font-size:11px;color:var(--text-tertiary);">Routine calendar events</div><div class="card" style="font-size:11px;color:var(--text-tertiary);">Every call, every standup</div></div></div></div>`},
+{t:"Write SMART tasks",d:"Every task should be specific, measurable, and time-bound. Binary is fine — live or not live counts as measurable. Vague names create vague ownership and vague outcomes.",m:`<div style="display:flex;flex-direction:column;gap:7px;"><div class="card"><div class="pill bad" style="margin-bottom:6px;">Vague</div><div style="font-size:12px;color:var(--text-secondary);">"Work on investor stuff"</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:3px;">Not measurable · no owner · can't be scored</div></div><div class="card"><div class="pill warn" style="margin-bottom:6px;">Better</div><div style="font-size:12px;color:var(--text-secondary);">"Send Resilience follow-up data"</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:3px;">Specific · binary pass/fail · still needs an ETA</div></div><div class="card"><div class="pill good" style="margin-bottom:6px;">SMART</div><div style="font-size:12px;color:var(--text);">"Send Resilience covered-population data pack — Apr 8"</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:3px;">Specific · measurable · owner: SK · ETA set · traces to Fundraising</div></div><div style="padding:8px 11px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);font-size:11px;color:var(--text-secondary);line-height:1.5;">Minimum bar: could someone else mark this Done with confidence when it's finished?</div></div>`},
+{t:"Scope — estimating effort is a skill",d:"Scope is how long a task will take, on a 1–5 scale. This is a skill you build over time — the dashboard tracks your accuracy. Honest scoping protects the priority stack.",m:`<div style="display:flex;flex-direction:column;gap:5px;">${[['1','≤3 days','"Send one email, draft a doc"','#E1F5EE','#085041'],['2','4–7 days','"Build a proposal, run a demo"','#E1F5EE','#085041'],['3','1–2 weeks','"Full integration spec, pilot kickoff"','#FAEEDA','#633806'],['4','3–4 weeks','"New feature build, security review"','#FAECE7','#993C1D'],['5','4+ weeks','"Multi-sprint workstream — consider breaking down"','#F1EFE8','#444441']].map(([n,l,e,bg,fg])=>`<div class="flc card" style="gap:10px;"><div style="width:26px;height:26px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:${fg};flex-shrink:0;">${n}</div><div style="flex:1;font-size:12px;color:var(--text);">${l}</div><div style="font-size:11px;color:var(--text-tertiary);">${e}</div></div>`).join('')}</div>`},
+{t:"Impact — estimating revenue leverage is a skill",d:"Impact measures revenue consequence, 1–5. Lower number = higher impact. A task's score derives from scope and impact — get these right and prioritization handles itself.",m:`<div style="display:flex;flex-direction:column;gap:5px;">${[['1','10%+ revenue','"New enterprise deal, round close"','#E1F5EE','#085041'],['2','6–9% revenue','"Mid-market pilot conversion"','#E1F5EE','#085041'],['3','3–5% revenue','"Add-on feature, TPA expansion"','#FAEEDA','#633806'],['4','1–2% revenue','"Minor pipeline acceleration"','#FAECE7','#993C1D'],['5','Minimal','"Hygiene, compliance, admin"','#F1EFE8','#444441']].map(([n,l,e,bg,fg])=>`<div class="flc card" style="gap:10px;"><div style="width:26px;height:26px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:${fg};flex-shrink:0;">${n}</div><div style="flex:1;font-size:12px;color:var(--text);">${l}</div><div style="font-size:11px;color:var(--text-tertiary);">${e}</div></div>`).join('')}<div style="padding:7px 10px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);font-size:11px;color:var(--text-secondary);">Score auto-calculates. You only set scope and impact.</div></div>`},
+{t:"ETA — committing to dates is a skill",d:"ETA is a commitment, not a guess. The dashboard tracks on-time rate — this is how the team develops discipline around time estimation. An ETA with no owner is not an ETA.",m:`<div style="display:flex;flex-direction:column;gap:7px;"><div class="card"><div class="pill bad" style="margin-bottom:6px;">Wrong</div><div style="font-size:12px;color:var(--text-secondary);">"Soon" · "This week" · no date set</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:3px;">Unmeasurable · no accountability · invisible to the dashboard</div></div><div class="card"><div class="pill good" style="margin-bottom:6px;">Right</div><div style="font-size:12px;color:var(--text);">Apr 10, 2026</div><div style="font-size:11px;color:var(--text-tertiary);margin-top:3px;">Specific date · single owner · feeds ETA reliability chart</div></div><div style="margin-top:4px;border-top:0.5px solid var(--border);padding-top:10px;"><div style="font-size:11px;font-weight:500;color:var(--text-secondary);margin-bottom:7px;">ETA reliability — what the dashboard tracks</div><div class="flc" style="gap:10px;"><div style="width:48px;height:48px;border-radius:50%;border:2px solid #1D9E75;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:#085041;flex-shrink:0;">78%</div><div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">This number improves as scope estimates sharpen. Track it weekly.</div></div></div></div>`},
+{t:"The task table",d:"The live operating view. PRI is force-ranked, SCR auto-calculates. SC and IM are the two inputs you control. Status and ETA are your commitments. Epic is the strategic anchor.",m:`<div style="overflow-x:auto;"><table class="tbl" style="min-width:420px;"><thead><tr><th style="border:1.5px solid #378ADD;border-radius:4px;">PRI</th><th>Task</th><th>Epic</th><th>Own</th><th>Status</th><th>ETA</th><th style="border:1.5px solid #1D9E75;border-radius:4px;">SCR</th><th>SC</th><th>IM</th></tr></thead><tbody><tr><td style="font-weight:500;color:var(--text);">1</td><td style="color:var(--text);white-space:nowrap;">Close seed round</td><td><span class="bx bpu">Fundraising</span></td><td><span class="bx bbl">SK</span></td><td><span class="bx bam">In progress</span></td><td>Apr 15</td><td style="font-weight:500;color:#0F6E56;">98</td><td style="color:var(--text-tertiary);">2</td><td style="color:var(--text-tertiary);">1</td></tr><tr><td style="font-weight:500;color:var(--text);">2</td><td style="color:var(--text);">MOO demo</td><td><span class="bx btl">Commercial</span></td><td><span class="bx btl">JP</span></td><td><span class="bx bgr">Started</span></td><td>Apr 10</td><td style="font-weight:500;color:#0F6E56;">92</td><td style="color:var(--text-tertiary);">2</td><td style="color:var(--text-tertiary);">1</td></tr><tr><td>3</td><td>Alliant pilot proposal</td><td><span class="bx btl">Commercial</span></td><td><span class="bx bbl">SK</span></td><td><span class="bx bgr">Not started</span></td><td>Apr 12</td><td>88</td><td style="color:var(--text-tertiary);">2</td><td style="color:var(--text-tertiary);">2</td></tr></tbody></table></div><div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;"><div style="font-size:11px;color:#0C447C;"><span style="font-weight:500;">PRI</span> — set by re-rank</div><div style="font-size:11px;color:#0F6E56;"><span style="font-weight:500;">SCR</span> — derived, not entered</div><div style="font-size:11px;color:var(--text-tertiary);"><span style="font-weight:500;">SC + IM</span> — the two skills you develop</div></div>`},
+{t:"Dashboard — the feedback loop",d:"Four charts close the loop on the three skills: scoping accuracy, ETA reliability, throughput, and epic progress. The more tasks completed with honest inputs, the more diagnostic it becomes.",m:`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;"><div class="card"><div style="font-size:10px;font-weight:500;color:var(--text-secondary);margin-bottom:7px;">Scoping accuracy</div><div><div style="font-size:10px;color:var(--text-tertiary);">On target</div><div class="br-bg"><div class="br-fill" style="width:70%;background:#1D9E75;"></div></div></div><div style="margin-top:4px;"><div style="font-size:10px;color:var(--text-tertiary);">Underscoped</div><div class="br-bg"><div class="br-fill" style="width:20%;background:#EF9F27;"></div></div></div><div style="margin-top:4px;"><div style="font-size:10px;color:var(--text-tertiary);">Overscoped</div><div class="br-bg"><div class="br-fill" style="width:10%;background:#E24B4A;"></div></div></div></div><div class="card"><div style="font-size:10px;font-weight:500;color:var(--text-secondary);margin-bottom:7px;">Epic progress</div><div><div style="font-size:10px;color:var(--text-tertiary);">Fundraising</div><div class="br-bg"><div class="br-fill" style="width:64%;background:#7F77DD;"></div></div></div><div style="margin-top:4px;"><div style="font-size:10px;color:var(--text-tertiary);">Commercial</div><div class="br-bg"><div class="br-fill" style="width:40%;background:#378ADD;"></div></div></div><div style="margin-top:4px;"><div style="font-size:10px;color:var(--text-tertiary);">Product</div><div class="br-bg"><div class="br-fill" style="width:25%;background:#1D9E75;"></div></div></div></div><div class="card"><div style="font-size:10px;font-weight:500;color:var(--text-secondary);margin-bottom:7px;">Throughput / week</div><div style="display:flex;align-items:flex-end;gap:4px;height:40px;"><div style="flex:1;background:#B5D4F4;border-radius:2px 2px 0 0;height:40%;"></div><div style="flex:1;background:#85B7EB;border-radius:2px 2px 0 0;height:60%;"></div><div style="flex:1;background:#378ADD;border-radius:2px 2px 0 0;height:80%;"></div><div style="flex:1;background:#185FA5;border-radius:2px 2px 0 0;height:100%;"></div></div></div><div class="card"><div style="font-size:10px;font-weight:500;color:var(--text-secondary);margin-bottom:7px;">ETA reliability</div><div class="flc" style="gap:8px;margin-top:4px;"><div style="width:40px;height:40px;border-radius:50%;border:2px solid #1D9E75;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#085041;flex-shrink:0;">78%</div><div style="font-size:11px;color:var(--text-secondary);">Improves as scope and impact inputs sharpen</div></div></div></div><div style="margin-top:14px;text-align:center;"><a href="https://skasle.github.io/alignment/" target="_blank" class="open-link">Open the live app →</a></div>`}
+];
+
+let cur=0;
+function dots(){document.getElementById('dots').innerHTML=S.map((_,i)=>`<div class="dot ${i===cur?'on':''}"></div>`).join('');}
+function render(){const s=S[cur];document.getElementById('body').innerHTML=`<div class="step-num">Step ${cur+1} of ${S.length}</div><div class="step-title">${s.t}</div><div class="step-desc">${s.d}</div><div class="mk">${s.m}</div>`;document.getElementById('prog').style.width=((cur+1)/S.length*100)+'%';document.getElementById('bb').disabled=cur===0;document.getElementById('nb').textContent=cur===S.length-1?'Open app →':'Next →';dots();}
+function nxt(){if(cur<S.length-1){cur++;render();}else{window.open('https://skasle.github.io/alignment/','_blank');}}
+function prev(){if(cur>0){cur--;render();}}
+render();
+</script>
+</body>
+</html>
